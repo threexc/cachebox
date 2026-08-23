@@ -1,14 +1,16 @@
+import _thread
+import asyncio
 import functools
 import inspect
+import threading
 import typing
 from collections.abc import Callable, Hashable
+from contextlib import AbstractAsyncContextManager, AbstractContextManager
 from copy import copy as _shallow_copy
 from copy import deepcopy as _deep_copy
 
 from ._cachebox import BaseCacheImpl, LRUCache
 from ._wrappers import (
-    AbstractAsyncContextManager,
-    AbstractContextManager,
     CacheInfo,
     _async_cached_wrapper,
     _async_cached_wrapper_without_lock,
@@ -377,10 +379,6 @@ def _cast_lock(
         type[AbstractContextManager] | type[AbstractAsyncContextManager] | bool | None
     ) = True,
 ) -> type[AbstractContextManager] | type[AbstractAsyncContextManager] | None:
-    import _thread
-    import asyncio
-    import threading
-
     if lock is None or lock is False:
         return None
 
