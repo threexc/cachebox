@@ -7,6 +7,7 @@ import threading
 import warnings
 from copy import copy as _shallow_copy
 from copy import deepcopy as _deep_copy
+from collections.abc import Callable, Hashable
 
 from ._cachebox import BaseCacheImpl, LRUCache
 from ._wrappers import (
@@ -27,7 +28,7 @@ if typing.TYPE_CHECKING:
 KT = typing.TypeVar("KT")
 VT = typing.TypeVar("VT")
 DT = typing.TypeVar("DT")
-FT = typing.TypeVar("FT", bound=typing.Callable[..., typing.Any])
+FT = typing.TypeVar("FT", bound=Callable[..., typing.Any])
 
 
 _COPY_TYPES = frozenset((dict, list, set))
@@ -67,8 +68,9 @@ _KWDS_MARK = object()
 _FAST_TYPES = frozenset((int, str))
 
 
-def make_key(*args, **kwds) -> typing.Hashable:
-    """ Default cache key.
+def make_key(*args: typing.Any, **kwds: typing.Any) -> Hashable:
+    """
+    Default cache key.
 
     Fast-path: a single `int or str argument is returned as-is.
     Otherwise a plain tuple (plus a kwargs sentinel when needed) is returned.
@@ -81,7 +83,7 @@ def make_key(*args, **kwds) -> typing.Hashable:
         return args
 
 
-def make_hash_key(*args, **kwds) -> int:
+def make_hash_key(*args: typing.Any, **kwds: typing.Any) -> int:
     """
     Return the hash of all positional and keyword arguments.
 
@@ -100,7 +102,7 @@ def make_hash_key(*args, **kwds) -> int:
     return hash(tuple(key))
 
 
-def make_typed_key(*args, **kwds) -> tuple:
+def make_typed_key(*args: typing.Any, **kwds: typing.Any) -> tuple[typing.Any, ...]:
     """
     Key that includes the exact runtime type of every argument.
 
@@ -378,7 +380,7 @@ class Frozen(BaseCacheImpl[KT, VT]):  # pragma: no cover
     def setdefault(
         self,
         key: KT,
-        default: typing.Optional[DT] = None,
+        default: DT | None = None,
         *args: typing.Any,
         **kwargs: typing.Any,
     ) -> typing.Optional[VT | DT]:
@@ -528,14 +530,14 @@ class Frozen(BaseCacheImpl[KT, VT]):  # pragma: no cover
 def _cast_lock(
     iscoroutinefunction: bool,
     lock: (
-        typing.Type[AbstractContextManager]
-        | typing.Type[AbstractAsyncContextManager]
+        type[AbstractContextManager]
+        | type[AbstractAsyncContextManager]
         | bool
         | None
     ) = True,
 ) -> (
-    typing.Type[AbstractContextManager]
-    | typing.Type[AbstractAsyncContextManager]
+    type[AbstractContextManager]
+    | type[AbstractAsyncContextManager]
     | None
 ):
     """
@@ -584,8 +586,8 @@ def _cast_lock(
 
 
 def cached(
-    cache: BaseCacheImpl | dict | typing.Callable[..., BaseCacheImpl] | None = None,
-    key_maker: typing.Callable[..., typing.Hashable] = make_key,
+    cache: BaseCacheImpl | dict | Callable[..., BaseCacheImpl] | None = None,
+    key_maker: Callable[..., Hashable] = make_key,
     clear_reuse: bool = False,
     callback: _Callback | None = None,
     copy_level: int = 1,
@@ -596,7 +598,7 @@ def cached(
         | bool
         | None
     ) = True,
-) -> typing.Callable[[FT], FT]:
+) -> Callable[[FT], FT]:
     """
     Decorator to memoize function/method results.
 
