@@ -193,7 +193,10 @@ class TTLCache(_CoreTTLCache[KT, VT]):
         self._stop_event.set()
 
     def __del__(self) -> None:
-        self.stop_sweeper()
+        # If super().__init__ raises for any reason (bad arguments, type error, ...),
+        # the assignment to self._stop_event never happens.
+        if hasattr(self, "_stop_event"):
+            self.stop_sweeper()
 
 
 class VTTLCache(_CoreVTTLCache[KT, VT]):
@@ -363,4 +366,7 @@ class VTTLCache(_CoreVTTLCache[KT, VT]):
         self._stop_event.set()
 
     def __del__(self) -> None:
-        self.stop_sweeper()
+        # If super().__init__ raises for any reason (bad arguments, type error, ...),
+        # the assignment to self._stop_event never happens.
+        if hasattr(self, "_stop_event"):
+            self.stop_sweeper()
