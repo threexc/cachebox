@@ -16,6 +16,7 @@ concurrency:
 env:
   (^_^): &interpreters "3.10 3.11 3.12 3.13 3.14 3.14t 3.15 3.15t pypy3.11"
   ○_○: &interpreters_without_pypy "3.10 3.11 3.12 3.13 3.14 3.14t 3.15 3.15t"
+  (o_o): &interpreters_win_arm64 "3.11 3.12 3.13 3.14 3.14t 3.15 3.15t"
 
 jobs:
   tools:
@@ -127,12 +128,13 @@ jobs:
           path: dist
 
   build-windows:
-    runs-on: windows-latest
+    runs-on: ${{ matrix.platform.runner }}
     strategy:
       matrix:
         platform:
-          - { target: x64, interpreter: *interpreters }
-          - { target: x86, interpreter: *interpreters_without_pypy }
+          - { runner: windows-latest, target: x64, arch: x64, interpreter: *interpreters }
+          - { runner: windows-latest, target: x86, arch: x86, interpreter: *interpreters_without_pypy }
+          - { runner: windows-11-arm, target: aarch64, arch: arm64, interpreter: *interpreters_win_arm64 }
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -142,7 +144,7 @@ jobs:
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: "3.x"
-          architecture: ${{ matrix.platform.target }}
+          architecture: ${{ matrix.platform.arch }}
 
       - uses: PyO3/maturin-action@e83996d129638aa358a18fbd1dfb82f0b0fb5d3b # v1.51.0
         # zizmor: ignore[cache-poisoning]
